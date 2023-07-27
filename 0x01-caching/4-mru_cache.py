@@ -7,74 +7,42 @@ Create a class MRUCache that inherits from BaseCaching and is a caching system
 BaseCaching = __import__('base_caching').BaseCaching
 
 
-class Node:
-    """ Node class for doubly linked list
-    """
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-        self.prev = None
-        self.next = None
-
-
 class MRUCache(BaseCaching):
-    """ MRUCache inherits from BaseCaching and implements MRU caching
+    """_summary_
     """
 
     def __init__(self):
-        """ Initialize the MRU cache
+        """_summary_
         """
         super().__init__()
-        self.head = None
-        self.tail = None
-
-    def _move_to_front(self, node):
-        """ Move the accessed node to the front of the linked list (MRU)
-        """
-        if node == self.head:
-            return
-
-        if node == self.tail:
-            self.tail = node.prev
-            self.tail.next = None
-        else:
-            node.prev.next = node.next
-            node.next.prev = node.prev
-
-        node.prev = None
-        node.next = self.head
-        self.head.prev = node
-        self.head = node
+        self.usedKeys = []
 
     def put(self, key, item):
-        """ Add an item in the cache (MRU algorithm)
+        """_summary_
+
+        Args:
+                        key (_type_): _description_
+                        item (_type_): _description_
         """
         if key is not None and item is not None:
-            if len(self.cache_data) >= BaseCaching.MAX_ITEMS:
-                # Get the most recently used key (the head of the linked list)
-                discarded_key = self.head.key
-                del self.cache_data[discarded_key]
-                self.head = self.head.next
-                if self.head:
-                    self.head.prev = None
-
-                print("DISCARD:", discarded_key)
-
-            new_node = Node(key, item)
-            self.cache_data[key] = new_node
-
-            if self.head is None:
-                self.head = self.tail = new_node
+            self.cache_data[key] = item
+            if key not in self.usedKeys:
+                self.usedKeys.append(key)
             else:
-                new_node.next = self.head
-                self.head.prev = new_node
-                self.head = new_node
+                self.usedKeys.append(
+                    self.usedKeys.pop(self.usedKeys.index(key)))
+            if len(self.usedKeys) > BaseCaching.MAX_ITEMS:
+                discard = self.usedKeys.pop(-2)
+                del self.cache_data[discard]
+                print('DISCARD: {:s}'.format(discard))
 
     def get(self, key):
-        """ Get an item by key
+        """return the value in self.cache_data linked to key
+
+        Args:
+                        key (_type_): _description_
         """
-        if key is not None and key in self.cache_data:
-            node = self.cache_data[key]
-            self._move_to_front(node)
-            return node.value
+        if key is not None and key in self.cache_data.keys():
+            self.usedKeys.append(self.usedKeys.pop(self.usedKeys.index(key)))
+            return self.cache_data.get(key)
         return None
